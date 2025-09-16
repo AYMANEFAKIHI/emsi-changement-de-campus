@@ -120,6 +120,19 @@
             </form>
         </div>
 
+        <div class="mb-10 p-6 text-center rounded-xl bg-green-100 border-green-300 border shadow-md">
+            <p class="text-green-800 font-semibold text-lg mb-2">
+                Aidez-nous à trouver plus de matchs!
+            </p>
+            <p class="text-green-700 mb-4">
+                Partagez ce lien dans les groupes de vos classes pour que tous les étudiants
+                qui souhaitent changer de campus puissent poster leur annonce rapidement.
+            </p>
+            <button id="copy-link-btn" class="bg-green-600 text-white py-2 px-4 rounded-lg font-semibold shadow-md hover:bg-green-700 transition duration-200">
+                <i class="fas fa-link mr-2"></i> Copier le lien
+            </button>
+        </div>
+
         <div class="mb-10 p-6 bg-white rounded-xl border border-green-200 shadow-md">
             <h2 class="text-2xl font-semibold text-green-700 mb-4">Trouver mon Match</h2>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -168,7 +181,7 @@
     <script type="module">
         import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
         
-        const supabaseUrl = 'https://jropljlziznpzypvxjkw.supabase.co';
+        const supabaseUrl = 'https://jropljlziznpzypvxjkw.supabase.co'; 
         const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impyb3Bsamx6aXpucHp5cHZ4amt3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc5NjU4MDksImV4cCI6MjA3MzU0MTgwOX0.QVo5bdwTguruXeY5oTmePtcLq__A65zFT7zq0SFT0Lc'; // Remplacez par votre clé publique anonyme
         
         const supabase = createClient(supabaseUrl, supabaseAnonKey);
@@ -193,8 +206,7 @@
         const submissionCampusDesireInput = document.getElementById('campusDesire');
         let allRequests = [];
 
-     
-
+        
         const campusOptions = {
             'TANGER': ['TANGER'],
             'RABAT': ['CENTRE 1', 'CENTRE 2', 'AGDAL 1', 'AGDAL 2', 'HASSAN', 'SOUISSI', 'BOUREGRAG'],
@@ -331,7 +343,7 @@
                 nom: document.getElementById('nom').value,
                 niveau: document.getElementById('niveau').value,
                 ville: submissionVilleInput.value,
-         
+             
                 classe: submissionCampusActuelInput.value,
                 campusdesire: submissionCampusDesireInput.value,
                 numero: document.getElementById('numero').value,
@@ -385,6 +397,17 @@
                     }
                 }
             }
+        });
+
+        document.getElementById('copy-link-btn').addEventListener('click', () => {
+            const url = 'https://aymanefakihi.github.io/emsi-changement-de-campus/';
+            const tempInput = document.createElement('textarea');
+            document.body.appendChild(tempInput);
+            tempInput.value = url;
+            tempInput.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempInput);
+            showMessageBox("Lien du site copié !");
         });
 
         const setupRealtimeListener = () => {
