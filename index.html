@@ -454,7 +454,7 @@
                 if (error) throw error;
                 
                 requestForm.reset();
-                showNotification("Votre demande a été publiée avec succès !", 'success');
+                showNotification("Merci ! Votre demande a été publiée avec succès.", 'success');
             } catch (error) {
                 console.error("Erreur détaillée de Supabase lors de l'insertion:", error);
                 setStatusMessage("Échec de la publication. Vérifiez la configuration de votre base de données Supabase.", 'error');
