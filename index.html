@@ -54,6 +54,21 @@
             <p class="text-gray-600">Partagez votre demande d'échange avec d'autres étudiants.</p>
         </header>
         
+        <!-- Avertissement et message d'accueil -->
+        <div id="welcome-message" class="mb-6 p-4 bg-red-100 border border-red-300 rounded-lg shadow-md text-red-800 text-sm md:text-base hidden">
+            <p class="font-semibold mb-2">
+                <i class="fas fa-exclamation-triangle mr-2"></i>Remarque importante :
+            </p>
+            <p class="mb-4">
+                Ce site a été conçu pour vous aider à trouver des correspondances pour votre échange de campus.
+                Veuillez l'utiliser de manière responsable et respectueuse. Toute utilisation abusive, y compris
+                la publication de faux numéros de téléphone, peut entraîner la suppression de vos demandes.
+            </p>
+            <button id="acknowledge-btn" class="w-full bg-red-600 text-white py-2 px-4 rounded-lg font-semibold shadow-md hover:bg-red-700 transition duration-200">
+                J'ai compris
+            </button>
+        </div>
+
         <div id="status-message" class="hidden mb-4 p-4 text-center rounded-lg text-sm font-medium" role="alert"></div>
 
         <div class="mb-10 p-6 bg-white rounded-xl border border-green-200 shadow-md">
@@ -217,6 +232,9 @@
         const submissionCampusActuelInput = document.getElementById('campusActuel');
         const submissionCampusDesireInput = document.getElementById('campusDesire');
         const totalRequestsSpan = document.getElementById('total-requests');
+        const welcomeMessage = document.getElementById('welcome-message');
+        const acknowledgeBtn = document.getElementById('acknowledge-btn');
+
         let allRequests = [];
 
         
@@ -364,6 +382,20 @@
             };
 
             try {
+                // 1. Check if the phone number already exists
+                const { count, error: countError } = await supabase
+                    .from('campus_swaps')
+                    .select('numero', { count: 'exact' })
+                    .eq('numero', data.numero);
+
+                if (countError) throw countError;
+
+                if (count > 0) {
+                    showMessageBox("Ce numéro de téléphone a déjà été utilisé pour une demande.");
+                    return; // Stop the submission
+                }
+
+                // 2. If unique, proceed with insertion
                 const { error } = await supabase
                     .from('campus_swaps')
                     .insert([data]);
@@ -486,8 +518,18 @@
                 fetchInitialRequests();
                 setupRealtimeListener();
             }
-        };
+        
+            // Check if the welcome message has been acknowledged
+            const hasAcknowledged = localStorage.getItem('acknowledged_welcome');
+            if (!hasAcknowledged) {
+                welcomeMessage.classList.remove('hidden');
+            }
 
+            acknowledgeBtn.addEventListener('click', () => {
+                welcomeMessage.classList.add('hidden');
+                localStorage.setItem('acknowledged_welcome', 'true');
+            });
+        };
     </script>
 </body>
 </html>
