@@ -386,7 +386,9 @@
             requestForm.reset();
         });
 
+        // Use event delegation for both delete and copy buttons
         requestsList.addEventListener('click', async (e) => {
+            // Logic for the delete button
             if (e.target.closest('.delete-btn')) {
                 const deleteButton = e.target.closest('.delete-btn');
                 const requestId = deleteButton.dataset.id;
@@ -405,6 +407,19 @@
                         showMessageBox("Échec de la suppression. Veuillez réessayer plus tard.");
                     }
                 });
+            }
+
+            // Logic for the copy button
+            if (e.target.closest('.copy-btn')) {
+                const copyButton = e.target.closest('.copy-btn');
+                const numero = copyButton.dataset.numero;
+                const tempInput = document.createElement('input');
+                document.body.appendChild(tempInput);
+                tempInput.value = numero;
+                tempInput.select();
+                document.execCommand('copy');
+                document.body.removeChild(tempInput);
+                showMessageBox("Numéro copié !");
             }
         });
 
