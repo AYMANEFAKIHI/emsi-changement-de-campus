@@ -157,32 +157,43 @@
         </div>
 
         <div>
-            <h2 class="text-2xl font-semibold text-green-700 mb-4">Demandes d'échange existantes</h2>
+            <h2 class="text-2xl font-semibold text-green-700 mb-2">Demandes d'échange existantes</h2>
+            <!-- Total count of requests added here -->
+            <div class="mb-4 text-center text-gray-600 font-medium">
+                <span id="total-requests">0</span> demandes au total.
+            </div>
             <div id="requests-list" class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div id="loading-requests" class="col-span-1 md:col-span-2 text-center text-gray-500 p-8">Chargement des demandes...</div>
             </div>
         </div>
 
+        <!-- Custom message box for alert and confirm -->
         <div id="message-box" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden items-center justify-center p-4">
             <div class="bg-white p-6 rounded-xl shadow-lg text-center max-w-sm w-full">
                 <p id="message-text" class="text-lg font-medium text-gray-800 mb-4"></p>
-                <button id="message-ok-btn" class="bg-green-600 text-white py-2 px-4 rounded-lg font-semibold hover:bg-green-700 transition duration-200">
-                    OK
-                </button>
+                <div class="flex justify-center space-x-2">
+                    <button id="message-ok-btn" class="bg-green-600 text-white py-2 px-4 rounded-lg font-semibold hover:bg-green-700 transition duration-200">
+                        OK
+                    </button>
+                    <button id="message-cancel-btn" class="bg-gray-200 text-gray-800 py-2 px-4 rounded-lg font-semibold hover:bg-gray-300 transition duration-200 hidden">
+                        Annuler
+                    </button>
+                </div>
             </div>
         </div>
         
     </div>
 
+    <!-- Footer with LinkedIn link -->
     <footer class="text-center text-sm text-gray-600 mt-8 mb-4">
-        <p>Développé par Aymane Fakihi</p>
+        <p>Développé par <a href="https://www.linkedin.com/in/aymane-fakihi-9a3435335/" target="_blank" class="text-green-600 hover:text-green-800 transition-colors duration-200">Aymane Fakihi</a></p>
     </footer>
 
     <script type="module">
         import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
         
         const supabaseUrl = 'https://jropljlziznpzypvxjkw.supabase.co'; 
-        const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impyb3Bsamx6aXpucHp5cHZ4amt3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc5NjU4MDksImV4cCI6MjA3MzU0MTgwOX0.QVo5bdwTguruXeY5oTmePtcLq__A65zFT7zq0SFT0Lc'; // Remplacez par votre clé publique anonyme
+        const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impyb3Bsamx6aXpucHp5cHZ4amt3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc5NjU4MDksImV4cCI6MjA3MzU0MTgwOX0.QVo5bdwTguruXeY5oTmePtcLq__A65zFT7zq0SFT0Lc'; 
         
         const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
@@ -195,6 +206,7 @@
         const messageBox = document.getElementById('message-box');
         const messageText = document.getElementById('message-text');
         const messageOkBtn = document.getElementById('message-ok-btn');
+        const messageCancelBtn = document.getElementById('message-cancel-btn');
         const statusMessage = document.getElementById('status-message');
         const submitBtn = document.getElementById('submit-btn');
         const submitText = document.getElementById('submit-text');
@@ -204,6 +216,7 @@
         const submissionVilleInput = document.getElementById('ville');
         const submissionCampusActuelInput = document.getElementById('campusActuel');
         const submissionCampusDesireInput = document.getElementById('campusDesire');
+        const totalRequestsSpan = document.getElementById('total-requests');
         let allRequests = [];
 
         
@@ -244,14 +257,27 @@
             }
         };
 
-        const showMessageBox = (message) => {
+        const showMessageBox = (message, isConfirm = false, onConfirm = null) => {
             messageText.textContent = message;
             messageBox.style.display = 'flex';
+            if (isConfirm) {
+                messageOkBtn.textContent = 'Oui';
+                messageCancelBtn.classList.remove('hidden');
+                messageOkBtn.onclick = () => {
+                    messageBox.style.display = 'none';
+                    if (onConfirm) onConfirm();
+                };
+                messageCancelBtn.onclick = () => {
+                    messageBox.style.display = 'none';
+                };
+            } else {
+                messageOkBtn.textContent = 'OK';
+                messageCancelBtn.classList.add('hidden');
+                messageOkBtn.onclick = () => {
+                    messageBox.style.display = 'none';
+                };
+            }
         };
-
-        messageOkBtn.addEventListener('click', () => {
-            messageBox.style.display = 'none';
-        });
 
         const formatDate = (dateString) => {
             const options = { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' };
@@ -300,19 +326,6 @@
                     requestsList.appendChild(card);
                 });
             }
-            
-            document.querySelectorAll('.copy-btn').forEach(button => {
-                button.addEventListener('click', (e) => {
-                    const numero = e.target.dataset.numero;
-                    const tempInput = document.createElement('input');
-                    document.body.appendChild(tempInput);
-                    tempInput.value = numero;
-                    tempInput.select();
-                    document.execCommand('copy');
-                    document.body.removeChild(tempInput);
-                    showMessageBox("Numéro copié !");
-                });
-            });
         };
 
         const filterRequests = () => {
@@ -343,11 +356,11 @@
                 nom: document.getElementById('nom').value,
                 niveau: document.getElementById('niveau').value,
                 ville: submissionVilleInput.value,
-             
+            
                 classe: submissionCampusActuelInput.value,
                 campusdesire: submissionCampusDesireInput.value,
                 numero: document.getElementById('numero').value,
-                user_id: myUserId 
+                user_id: myUserId
             };
 
             try {
@@ -374,11 +387,10 @@
         });
 
         requestsList.addEventListener('click', async (e) => {
-            if (e.target.classList.contains('delete-btn')) {
-                const requestId = e.target.dataset.id;
-                const confirmDelete = confirm("Êtes-vous sûr de vouloir supprimer cette demande ?");
-                
-                if (confirmDelete) {
+            if (e.target.closest('.delete-btn')) {
+                const deleteButton = e.target.closest('.delete-btn');
+                const requestId = deleteButton.dataset.id;
+                showMessageBox("Êtes-vous sûr de vouloir supprimer cette demande ?", true, async () => {
                     try {
                         const { error } = await supabase
                             .from('campus_swaps')
@@ -388,14 +400,11 @@
                         if (error) throw error;
                         
                         showMessageBox("La demande a été supprimée avec succès !");
-                        
-                        const cardToRemove = e.target.closest('.rounded-xl');
-                        cardToRemove.remove();
                     } catch (error) {
                         console.error("Erreur de Supabase lors de la suppression:", error);
                         showMessageBox("Échec de la suppression. Veuillez réessayer plus tard.");
                     }
-                }
+                });
             }
         });
 
@@ -411,7 +420,7 @@
         });
 
         const setupRealtimeListener = () => {
-             supabase.channel('public-changes')
+            supabase.channel('public-changes')
                 .on('postgres_changes', 
                     { event: 'INSERT', schema: 'public', table: 'campus_swaps' },
                     payload => {
@@ -419,6 +428,7 @@
                         const newRequest = payload.new;
                         allRequests.unshift(newRequest); 
                         filterRequests();
+                        totalRequestsSpan.textContent = allRequests.length;
                     })
                 .on('postgres_changes',
                     { event: 'DELETE', schema: 'public', table: 'campus_swaps' },
@@ -427,6 +437,7 @@
                         const deletedId = payload.old.id;
                         allRequests = allRequests.filter(req => req.id !== deletedId);
                         filterRequests();
+                        totalRequestsSpan.textContent = allRequests.length;
                     })
                 .subscribe();
         };
@@ -443,6 +454,7 @@
                 
                 allRequests = data;
                 loadingRequests.classList.add('hidden');
+                totalRequestsSpan.textContent = allRequests.length;
                 renderRequests(allRequests);
                 
             } catch (error) {
