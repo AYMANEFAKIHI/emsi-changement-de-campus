@@ -43,9 +43,33 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+        .request-card {
+            transition: transform 0.2s ease-in-out;
+        }
+        .request-card:hover {
+            transform: scale(1.02);
+        }
+        .notification-pop-up {
+            animation: slideIn 0.5s forwards, fadeOut 0.5s 2.5s forwards;
+        }
+        @keyframes slideIn {
+            from { transform: translateY(-100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; display: none; }
+        }
     </style>
 </head>
 <body class="bg-green-50 flex flex-col min-h-screen p-4">
+
+    <div id="notification-pop-up" class="fixed top-4 left-1/2 -translate-x-1/2 z-50 p-4 rounded-lg shadow-lg font-semibold text-white hidden">
+        <div class="flex items-center space-x-2">
+            <i id="notification-icon"></i>
+            <span id="notification-message"></span>
+        </div>
+    </div>
 
     <div class="container mx-auto bg-white rounded-2xl shadow-xl p-6 md:p-10 my-8 flex-grow">
         
@@ -152,9 +176,9 @@
             <h2 class="text-2xl font-semibold text-green-700 mb-4">Trouver mon Match</h2>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                    <label for="searchVille" class="block text-sm font-medium text-gray-700">Rechercher par Ville</label>
+                    <label for="searchVille" class="block text-sm font-medium text-gray-700">Ville</label>
                     <select id="searchVille" class="mt-1 block w-full rounded-md border-green-300 shadow-sm focus:border-green-500 focus:ring-green-500 p-2 border">
-                        <option value="">Sélectionnez une ville</option>
+                        <option value="">Toutes les villes</option>
                         <option value="TANGER">TANGER</option>
                         <option value="RABAT">RABAT</option>
                         <option value="MARRAKECH">MARRAKECH</option>
@@ -163,9 +187,9 @@
                     </select>
                 </div>
                 <div>
-                    <label for="searchCampus" class="block text-sm font-medium text-gray-700">Rechercher par Campus souhaité</label>
+                    <label for="searchCampus" class="block text-sm font-medium text-gray-700">Campus souhaité</label>
                     <select id="searchCampus" class="mt-1 block w-full rounded-md border-green-300 shadow-sm focus:border-green-500 focus:ring-green-500 p-2 border">
-                        <option value="">Sélectionnez un campus</option>
+                        <option value="">Tous les campus</option>
                     </select>
                 </div>
             </div>
@@ -231,10 +255,13 @@
         const submissionVilleInput = document.getElementById('ville');
         const submissionCampusActuelInput = document.getElementById('campusActuel');
         const submissionCampusDesireInput = document.getElementById('campusDesire');
+        const submissionNiveauInput = document.getElementById('niveau');
         const totalRequestsSpan = document.getElementById('total-requests');
         const welcomeMessage = document.getElementById('welcome-message');
         const acknowledgeBtn = document.getElementById('acknowledge-btn');
-
+        const notificationPopUp = document.getElementById('notification-pop-up');
+        const notificationIcon = document.getElementById('notification-icon');
+        const notificationMessage = document.getElementById('notification-message');
         let allRequests = [];
 
         
@@ -275,6 +302,30 @@
             }
         };
 
+        const showNotification = (message, type) => {
+            notificationMessage.textContent = message;
+            notificationPopUp.classList.remove('hidden');
+            notificationPopUp.classList.remove('bg-green-600', 'bg-red-600');
+            notificationIcon.className = '';
+
+            if (type === 'success') {
+                notificationPopUp.classList.add('bg-green-600');
+                notificationIcon.classList.add('fas', 'fa-check-circle');
+            } else if (type === 'error') {
+                notificationPopUp.classList.add('bg-red-600');
+                notificationIcon.classList.add('fas', 'fa-exclamation-circle');
+            }
+
+            // Réinitialiser l'animation pour la rejouer
+            notificationPopUp.style.animation = 'none';
+            notificationPopUp.offsetHeight; // Trigger reflow
+            notificationPopUp.style.animation = null; 
+            
+            setTimeout(() => {
+                notificationPopUp.classList.add('hidden');
+            }, 3000); // Hide after 3 seconds
+        };
+
         const showMessageBox = (message, isConfirm = false, onConfirm = null) => {
             messageText.textContent = message;
             messageBox.style.display = 'flex';
@@ -304,12 +355,12 @@
 
         const createRequestCard = (data) => {
             const card = document.createElement('div');
-            card.className = "bg-white p-4 rounded-xl shadow-md border border-green-200 flex flex-col justify-between";
+            card.className = "request-card bg-white p-4 rounded-xl shadow-md border border-green-200 flex flex-col justify-between";
             
             card.innerHTML = `
                 <div class="space-y-2">
                     <p class="text-green-800 font-bold text-lg"><i class="fas fa-user-graduate mr-2 text-green-500"></i>${data.prenom} ${data.nom}</p>
-                    <p class="text-gray-700"><i class="fas fa-chart-bar mr-2 text-green-500"></i>Niveau et filière: <span class="font-medium">${data.niveau}</span></p>
+                    <p class="text-gray-700"><i class="fas fa-signal mr-2 text-green-500"></i>Niveau: <span class="font-medium">${data.niveau}</span></p>
                     <p class="text-gray-700"><i class="fas fa-city mr-2 text-green-500"></i>Ville: <span class="font-medium">${data.ville}</span></p>
                     <p class="text-gray-700"><i class="fas fa-building-columns mr-2 text-green-500"></i>Campus actuel: <span class="font-medium">${data.classe}</span></p>
                     <p class="text-gray-700"><i class="fas fa-location-arrow mr-2 text-green-500"></i>Campus souhaité: <span class="font-medium text-green-600">${data.campusdesire}</span></p>
@@ -372,7 +423,7 @@
             const data = {
                 prenom: document.getElementById('prenom').value,
                 nom: document.getElementById('nom').value,
-                niveau: document.getElementById('niveau').value,
+                niveau: submissionNiveauInput.value,
                 ville: submissionVilleInput.value,
             
                 classe: submissionCampusActuelInput.value,
@@ -391,7 +442,7 @@
                 if (countError) throw countError;
 
                 if (count > 0) {
-                    showMessageBox("Ce numéro de téléphone a déjà été utilisé pour une demande.");
+                    showNotification("Ce numéro de téléphone a déjà été utilisé pour une demande.", 'error');
                     return; // Stop the submission
                 }
 
@@ -403,7 +454,7 @@
                 if (error) throw error;
                 
                 requestForm.reset();
-                showMessageBox("Votre demande a été publiée avec succès !");
+                showNotification("Votre demande a été publiée avec succès !", 'success');
             } catch (error) {
                 console.error("Erreur détaillée de Supabase lors de l'insertion:", error);
                 setStatusMessage("Échec de la publication. Vérifiez la configuration de votre base de données Supabase.", 'error');
@@ -433,7 +484,7 @@
 
                         if (error) throw error;
                         
-                        showMessageBox("La demande a été supprimée avec succès !");
+                        showNotification("La demande a été supprimée avec succès !", 'success');
                     } catch (error) {
                         console.error("Erreur de Supabase lors de la suppression:", error);
                         showMessageBox("Échec de la suppression. Veuillez réessayer plus tard.");
@@ -451,7 +502,7 @@
                 tempInput.select();
                 document.execCommand('copy');
                 document.body.removeChild(tempInput);
-                showMessageBox("Numéro copié !");
+                showNotification("Numéro copié !", 'success');
             }
         });
 
@@ -463,7 +514,7 @@
             tempInput.select();
             document.execCommand('copy');
             document.body.removeChild(tempInput);
-            showMessageBox("Lien du site copié !");
+            showNotification("Lien du site copié !", 'success');
         });
 
         const setupRealtimeListener = () => {
@@ -502,7 +553,7 @@
                 allRequests = data;
                 loadingRequests.classList.add('hidden');
                 totalRequestsSpan.textContent = allRequests.length;
-                renderRequests(allRequests);
+                filterRequests(); // Initial filtering
                 
             } catch (error) {
                 console.error("Erreur détaillée de Supabase lors du chargement initial:", error);
